@@ -12,29 +12,8 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- *
- * Test code for DHT 11 Temperature Module w/ Hologram Dash
-  * Modified by Hologram for the Hologram Dash
-  * This is based off of the Adafruit Arduino DHT example at:
-  * https://github.com/adafruit/DHT-sensor-library/tree/master/examples/DHTtester
-  * This modified Hologram version sends the humidity, temperature 
-  * data back to the Hologram cloud
-  * 
-  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-  * SOFTWARE.
-  * 
-  */
+ */
 
-#include <DHT.h>
-#define DHTPIN R04     // DHT Sensor output pin connected to Dash GPIO
-#define DHTTYPE DHT11   // DHT 11
-
-DHT dht(DHTPIN, DHTTYPE);
 
 int pins[3] = {L09, L08, L07}; //R, G, B
 int curColVal[3] = {0,0,0};
@@ -89,7 +68,6 @@ void setup()
   delay(4000);
   
   Dash.begin();
-  dht.begin();
   Dash.pulseLED(100,5000);
 }
 
@@ -118,20 +96,6 @@ void resetColorList()
   timeBetweenSteps = 100;
 }
 
-void doTempSend() {
-  char buf[8];
-  dtostrf(dht.readTemperature(true),4,2,buf);
-  String ret = "&message=Temperature: ";
-  ret.concat(buf);
-  ret.concat(", ");
-  dtostrf(dht.readHumidity(),4,2,buf);
-  ret.concat("humidity: ");
-  ret.concat(buf);
-  
-  SerialCloud.println(ret);
-  
-}
-
 void doPartyMode()
 {
   SerialUSB.println("PARTY!");
@@ -158,10 +122,6 @@ void parseColorString(String sms)
     }
     String colorStr = sms.substring(startidx, endidx);
     SerialUSB.println(colorStr);
-    if(colorStr == "TEMPERATURE") { 
-      doTempSend();
-      return; 
-      }
     if(colorStr == "PARTY") {
       doPartyMode();
       return;
@@ -223,8 +183,10 @@ void loop()
     }
 
     // add latest char to our buffer.
-    tempBuffer.concat(currChar); 
-
+    if (currChar != '\0') {
+      tempBuffer.concat(currChar); 
+    }
+    
     SerialUSB.write(currChar);
   }
 
